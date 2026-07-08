@@ -14,7 +14,7 @@ async function api(path, options = {}) {
   const token = getToken();
   if (token) headers["Authorization"] = `Bearer ${token}`;
 
-  const res = await fetch(`${API}/api${path}`, { ...options, headers });
+  const res = await fetch(`${API}${path}`, { ...options, headers });
   if (res.status === 401) {
     clearToken();
     showAuth();
@@ -86,11 +86,15 @@ $("#register-form").addEventListener("submit", async (e) => {
     password: fd.get("password"),
   };
   try {
-    await fetch(`${API}/auth/register`, {
+    const regRes = await fetch(`${API}/auth/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
+    if (!regRes.ok) {
+      const err = await regRes.json().catch(() => ({}));
+      throw new Error(err.detail || "Blad rejestracji");
+    }
     // Automatyczne logowanie po rejestracji
     const body = new URLSearchParams({ username: payload.username, password: payload.password });
     const res = await fetch(`${API}/auth/login`, {
@@ -98,6 +102,10 @@ $("#register-form").addEventListener("submit", async (e) => {
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body,
     });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || "Blad logowania po rejestracji");
+    }
     const data = await res.json();
     setToken(data.access_token);
     await afterLogin();
