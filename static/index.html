@@ -36,6 +36,7 @@
       <h1>🍳 Recipe Chat</h1>
       <div class="header-right">
         <span id="user-greeting"></span>
+        <button id="history-btn" class="btn-secondary">📜 Historia</button>
         <button id="logout-btn" class="btn-secondary">Wyloguj</button>
       </div>
     </header>
@@ -47,6 +48,14 @@
         <button class="cat-btn" data-category="obiad">🍲 Obiad</button>
         <button class="cat-btn" data-category="kolacja">🥗 Kolacja</button>
       </div>
+    </div>
+
+    <div id="history-view" class="hidden">
+      <div class="chat-header">
+        <button id="history-back-btn" class="btn-secondary">← Kategorie</button>
+        <span>📜 Historia rozmow</span>
+      </div>
+      <div id="history-list" class="history-list"></div>
     </div>
 
     <div id="chat-view" class="hidden">

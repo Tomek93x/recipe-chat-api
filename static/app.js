@@ -36,8 +36,25 @@ function showAuth() {
 function showApp() {
   $("#auth-view").classList.add("hidden");
   $("#app-view").classList.remove("hidden");
+  showCategoryView();
+}
+
+function showCategoryView() {
   $("#category-view").classList.remove("hidden");
+  $("#history-view").classList.add("hidden");
   $("#chat-view").classList.add("hidden");
+}
+
+function showHistoryView() {
+  $("#category-view").classList.add("hidden");
+  $("#history-view").classList.remove("hidden");
+  $("#chat-view").classList.add("hidden");
+}
+
+function showChatView() {
+  $("#category-view").classList.add("hidden");
+  $("#history-view").classList.add("hidden");
+  $("#chat-view").classList.remove("hidden");
 }
 
 // Taby logowanie / rejestracja
@@ -131,8 +148,7 @@ $$(".cat-btn").forEach((btn) => {
 });
 
 $("#back-btn").addEventListener("click", () => {
-  $("#chat-view").classList.add("hidden");
-  $("#category-view").classList.remove("hidden");
+  showCategoryView();
 });
 
 $("#new-chat-btn").addEventListener("click", () => {
@@ -146,8 +162,7 @@ let state = { category: null, currentConversationId: null };
 async function openChat(category) {
   state.category = category;
   state.currentConversationId = null;
-  $("#category-view").classList.add("hidden");
-  $("#chat-view").classList.remove("hidden");
+  showChatView();
   $("#chat-title").textContent = categoryEmoji(category) + " " + capitalize(category);
 
   // Wczytaj ostatnia konwersacje dla tej kategorii
@@ -162,6 +177,22 @@ async function openChat(category) {
     } else {
       $("#messages").innerHTML = "";
     }
+  } catch (err) {
+    console.error(err);
+  }
+  $("#chat-input").focus();
+}
+
+// Otwiera konkretna, wybrana z historii konwersacje (niezaleznie ktora jest "ostatnia")
+async function openConversationById(conversationId, category) {
+  state.category = category;
+  state.currentConversationId = conversationId;
+  showChatView();
+  $("#chat-title").textContent = categoryEmoji(category) + " " + capitalize(category);
+  $("#messages").innerHTML = "";
+  try {
+    const msgs = await api(`/chat/${conversationId}/messages`);
+    msgs.forEach((m) => appendMessage(m.role, m.content, false));
   } catch (err) {
     console.error(err);
   }
@@ -217,6 +248,50 @@ $("#chat-form").addEventListener("submit", async (e) => {
     input.focus();
   }
 });
+
+// ============== HISTORIA ==============
+$("#history-btn").addEventListener("click", openHistory);
+$("#history-back-btn").addEventListener("click", () => {
+  showCategoryView();
+});
+
+async function openHistory() {
+  showHistoryView();
+  const list = $("#history-list");
+  list.innerHTML = '<p class="history-empty">Wczytywanie...</p>';
+
+  try {
+    const convs = await api("/conversations/");
+    if (!convs.length) {
+      list.innerHTML = '<p class="history-empty">Nie masz jeszcze zadnych rozmow. Wybierz kategorie i zacznij czat!</p>';
+      return;
+    }
+    list.innerHTML = "";
+    convs.forEach((c) => {
+      const item = document.createElement("div");
+      item.className = "history-item";
+      item.innerHTML = `
+        <span class="history-item-category">${categoryEmoji(c.category)} ${capitalize(c.category)}</span>
+        <span class="history-item-date">${formatDate(c.updated_at)}</span>
+      `;
+      item.addEventListener("click", () => openConversationById(c.id, c.category));
+      list.appendChild(item);
+    });
+  } catch (err) {
+    list.innerHTML = `<p class="history-empty">❌ ${err.message}</p>`;
+  }
+}
+
+function formatDate(isoString) {
+  const d = new Date(isoString);
+  return d.toLocaleString("pl-PL", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
 
 // ============== INIT ==============
 if (getToken()) {
