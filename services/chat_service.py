@@ -1,69 +1,90 @@
+from datetime import datetime, timezone
 from beanie import PydanticObjectId
 
 from models.conversation import Conversation
 from models.message import Message
-from services.ollama_service import generate_recipe_response
+from services.ai_service import generate_recipe
 
 
-async def get_or_create_conversation(user_id: str, category: str, conversation_id: str | None):
+async def get_or_create_conversation(
+    user_id: str, category: str, conversation_id: str | None
+) -> Conversation:
     if conversation_id:
-        conversation = await Conversation.get(PydanticObjectId(conversation_id))
-        if conversation:
+        try:
+            conversation = await Conversation.get(PydanticObjectId(conversation_id))
+        except Exception:
+            conversation = None
+        if conversation and str(conversation.user_id) == user_id:
             return conversation
 
     conversation = Conversation(
         user_id=PydanticObjectId(user_id),
         category=category,
-        title=f"{category.capitalize()} chat"
+        title=f"{category.capitalize()} - czat",
     )
     await conversation.insert()
     return conversation
 
 
-async def build_prompt(conversation_id: PydanticObjectId, category: str, new_message: str) -> str:
-    messages = await Message.find(Message.conversation_id == conversation_id).sort("created_at").to_list()
-
+async def build_prompt(
+    conversation_id: PydanticObjectId, category: str, new_message: str
+) -> str:
+    messages = (
+        await Message.find(Message.conversation_id == conversation_id)
+        .sort("created_at")
+        .to_list()
+    )
     history = "\n".join([f"{msg.role}: {msg.content}" for msg in messages])
-
     return (
-        f"Jesteś pomocnikiem kulinarnym.\n"
-        f"Kategoria posiłku: {category}\n"
+        "Jestes pomocnikiem kulinarnym. "
+        f"Uzytkownik wybral kategorie posilku: {category}. "
+        "Odpowiadaj po polsku. Jesli podano skladniki, zaproponuj konkretne danie, "
+        "wymien skladniki (z brakujacymi jesli trzeba) i krotka instrukcje przygotowania.\n\n"
         f"Historia rozmowy:\n{history}\n"
-        f"Nowa wiadomość użytkownika: {new_message}\n"
-        f"Odpowiedz po polsku i zaproponuj danie lub przepis na podstawie składników."
+        f"Nowa wiadomosc uzytkownika: {new_message}\n"
+        "Twoja odpowiedz:"
     )
 
 
-async def send_chat_message(user_id: str, category: str, message: str, conversation_id: str | None):
+async def send_chat_message(
+    user_id: str, category: str, message: str, conversation_id: str | None
+) -> dict:
     conversation = await get_or_create_conversation(user_id, category, conversation_id)
 
-    user_message = Message(
+    # Zapisz wiadomosc usera
+    user_msg = Message(
         conversation_id=conversation.id,
         role="user",
-        content=message
+        content=message,
     )
-    await user_message.insert()
+    await user_msg.insert()
 
+    # Wygeneruj odpowiedz AI
     prompt = await build_prompt(conversation.id, category, message)
-    ai_text = await generate_recipe_response(prompt)
+    ai_text = await generate_recipe(prompt=prompt)
 
-    ai_message = Message(
+    ai_msg = Message(
         conversation_id=conversation.id,
         role="assistant",
-        content=ai_text
+        content=ai_text,
     )
-    await ai_message.insert()
+    await ai_msg.insert()
+
+    # Aktualizuj updated_at konwersacji
+    conversation.updated_at = datetime.now(timezone.utc)
+    await conversation.save()
 
     return {
         "conversation_id": str(conversation.id),
         "user_message": message,
-        "ai_message": ai_text
+        "ai_message": ai_text,
     }
 
 
 async def get_conversation_messages(conversation_id: str):
-    messages = await Message.find(
-        Message.conversation_id == PydanticObjectId(conversation_id)
-    ).sort("created_at").to_list()
-
+    messages = (
+        await Message.find(Message.conversation_id == PydanticObjectId(conversation_id))
+        .sort("created_at")
+        .to_list()
+    )
     return messages

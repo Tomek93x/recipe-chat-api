@@ -1,11 +1,13 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional, Literal
 
 
+Category = Literal["sniadanie", "obiad", "kolacja"]
+
+
 class ChatMessageRequest(BaseModel):
-    user_id: str
-    category: str
-    message: str
+    category: Category
+    message: str = Field(min_length=1, max_length=2000)
     conversation_id: Optional[str] = None
 
 
