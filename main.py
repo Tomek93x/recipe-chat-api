@@ -1,12 +1,23 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
-from routers.recipe import router as recipe_router
 
-app = FastAPI(title="Recipe Chat API")
+from core.config import settings
+from core.database import init_db
+from routers import chat, conversations
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await init_db()
+    yield
+
+
+app = FastAPI(title=settings.app_name, lifespan=lifespan)
+
+app.include_router(chat.router)
+app.include_router(conversations.router)
 
 
 @app.get("/")
-def read_root():
-    return {"message": "Recipe Chat API works"}
-
-
-app.include_router(recipe_router)
+async def root():
+    return {"message": "Recipe Chat API is running"}
