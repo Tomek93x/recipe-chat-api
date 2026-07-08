@@ -1,0 +1,37 @@
+version: "3.9"
+
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    volumes:
+      - mongo_data:/data/db
+    ports:
+      - "27017:27017"
+
+  ollama:
+    image: ollama/ollama:latest
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+
+  api:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      - mongo
+      - ollama
+    env_file:
+      - .env
+    environment:
+      MONGO_URL: mongodb://mongo:27017
+      OLLAMA_URL: http://ollama:11434
+      AI_PROVIDER: ${AI_PROVIDER:-ollama}
+    ports:
+      - "8000:8000"
+
+volumes:
+  mongo_data:
+  ollama_data:
