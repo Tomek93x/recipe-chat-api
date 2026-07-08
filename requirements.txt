@@ -13,3 +13,7 @@ bcrypt==4.0.1
 python-jose[cryptography]==3.3.0
 python-multipart==0.0.19
 openai==1.57.1
+beanie==2.1.0
+motor==3.7.1
+pymongo==4.17.0
+lazy-model==0.4.0
