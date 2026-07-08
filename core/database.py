@@ -16,5 +16,5 @@ async def init_db() -> None:
         database=db,
         document_models=[User, Conversation, Message],
     )
-    await User.get_motor_collection().create_index("email", unique=True)
-    await User.get_motor_collection().create_index("username", unique=True)
+    await User.get_pymongo_collection().create_index("email", unique=True)
+    await User.get_pymongo_collection().create_index("username", unique=True)
