@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Recipe Chat</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div id="auth-view" class="view">
+    <h1>🍳 Recipe Chat</h1>
+    <p class="subtitle">Znajdz przepis na podstawie skladnikow</p>
+    <div class="auth-tabs">
+      <button class="tab active" data-tab="login">Logowanie</button>
+      <button class="tab" data-tab="register">Rejestracja</button>
+    </div>
+
+    <form id="login-form" class="auth-form">
+      <input type="text" name="username" placeholder="Nazwa uzytkownika" required />
+      <input type="password" name="password" placeholder="Haslo" required />
+      <button type="submit">Zaloguj sie</button>
+    </form>
+
+    <form id="register-form" class="auth-form hidden">
+      <input type="email" name="email" placeholder="Email" required />
+      <input type="text" name="username" placeholder="Nazwa uzytkownika" required />
+      <input type="password" name="password" placeholder="Haslo (min. 6 znakow)" required minlength="6" />
+      <button type="submit">Zaloz konto</button>
+    </form>
+
+    <div id="auth-error" class="error"></div>
+  </div>
+
+  <div id="app-view" class="view hidden">
+    <header>
+      <h1>🍳 Recipe Chat</h1>
+      <div class="header-right">
+        <span id="user-greeting"></span>
+        <button id="logout-btn" class="btn-secondary">Wyloguj</button>
+      </div>
+    </header>
+
+    <div id="category-view">
+      <p class="prompt-text">Wybierz kategorie posilku:</p>
+      <div class="categories">
+        <button class="cat-btn" data-category="sniadanie">🥐 Sniadanie</button>
+        <button class="cat-btn" data-category="obiad">🍲 Obiad</button>
+        <button class="cat-btn" data-category="kolacja">🥗 Kolacja</button>
+      </div>
+    </div>
+
+    <div id="chat-view" class="hidden">
+      <div class="chat-header">
+        <button id="back-btn" class="btn-secondary">← Kategorie</button>
+        <span id="chat-title"></span>
+        <button id="new-chat-btn" class="btn-secondary">+ Nowy</button>
+      </div>
+      <div id="messages" class="messages"></div>
+      <form id="chat-form" class="chat-form">
+        <input
+          type="text"
+          id="chat-input"
+          placeholder="Wpisz skladniki, np. jajka, mleko, maslo..."
+          autocomplete="off"
+          required
+        />
+        <button type="submit">Wyslij</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
