@@ -11,7 +11,7 @@ async def _call_ollama(prompt: str) -> str:
         "stream": False,
     }
     try:
-        async with httpx.AsyncClient(timeout=120.0) as client:
+        async with httpx.AsyncClient(timeout=300.0) as client:
             r = await client.post(f"{settings.ollama_url}/api/generate", json=payload)
             r.raise_for_status()
             data = r.json()
