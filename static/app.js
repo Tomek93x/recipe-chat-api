@@ -102,6 +102,14 @@ $("#register-form").addEventListener("submit", async (e) => {
     username: fd.get("username"),
     password: fd.get("password"),
   };
+  const passwordConfirm = fd.get("password_confirm");
+
+  // Walidacja: hasla musza byc identyczne
+  if (payload.password !== passwordConfirm) {
+    $("#auth-error").textContent = "Hasla nie sa identyczne";
+    return;
+  }
+
   try {
     const regRes = await fetch(`${API}/auth/register`, {
       method: "POST",
